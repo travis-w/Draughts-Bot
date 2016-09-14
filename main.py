@@ -1,3 +1,5 @@
+BOARD_SIZE = 8
+
 
 def read_board():
     """ Read in game board
@@ -5,8 +7,10 @@ def read_board():
     Read in the game board from stdin
 
     :returns Dictionary of board with following properties:
-        - 1: list of player one locations on board
-        - 2: list of player two attributes on board
+        - 1: List of player one locations on board
+        - 2: List of player two attributes on board
+
+        Locations are tuples in the form (x, y)
 
     """
     board = {
@@ -14,9 +18,9 @@ def read_board():
         2: []
     }
 
-    for i in range(8):
+    for i in range(BOARD_SIZE):
         tmp_row = [int(x) for x in input().split()]
-        for j in range(8):
+        for j in range(BOARD_SIZE):
             if tmp_row[j] != 0:
                 board[tmp_row[j]].append((j, i))
 
