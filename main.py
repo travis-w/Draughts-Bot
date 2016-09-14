@@ -34,9 +34,15 @@ def get_location(board, piece):
 
     :param tuple piece: Tuple of piece location to get (x, y)
 
+    :raises IndexError if piece out of bounds
+
     :returns Value at given index in board
 
     """
+    # Raise error if trying to look at piece out of bounds
+    if piece[0] < 0 or piece[1] < 0 or piece[0] >= BOARD_SIZE or piece[1] >= BOARD_SIZE:
+        raise IndexError("IndexError: Piece out of bounds")
+
     val = 0
 
     if piece in board[1]:
