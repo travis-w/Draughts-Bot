@@ -38,6 +38,23 @@ def read_board():
 
     return board
 
+def print_move(move, reason):
+    """
+    """
+    # Print starting location and number of moves
+    move_str = " ".join([str(x) for x in move["start"]]) + "\n"
+    move_str += str(move["moves"]) + "\n"
+    
+    # Add landing locations
+    for i in range(move["moves"]):
+        move_str += " ".join([str(x) for x in move["locations"][i]])
+        
+        # Add new line on all but last location
+        if i < move["moves"] - 1:
+            move_str += "\n"
+        
+    print(move_str)
+    print(reason)
 
 def get_location(board, piece):
     """ Given a tuple, retrieve location on board
@@ -67,21 +84,59 @@ def get_location(board, piece):
     return val
 
 
+def get_move(board, player, piece, direction):
+    """
+    """
+    # Get cooresponding action
+    action = ACTIONS[player][direction]
+    
+    # Calculate coordinates of the new score
+    new_location = (piece[0] + action[0], piece[1] + action[1])
+    
+    # Start building move
+    move = {
+        "start": piece,
+        "moves": 1,
+        "locations": []
+    }
+    
+    # Try/Except to allow checking if on board
+    try:
+        on_board = get_location(board, new_location)
+    except IndexError:
+        # Can not make move
+        return None
+
+    # Check if space open
+    if on_board == 0:
+        # Possible to move
+        move["locations"].append(new_location)
+        return move
+    elif on_board == player:
+        # Player piece there, impossible move
+        return None
+    else:
+        # Opponent on new location, check if jumps possible
+        pass
+    
+    
 def get_available_moves(board, player):
+    """
+    """
     pieces = board[player]
-    direc = ACTIONS[player]
-
-    available_moves = []
-
+    actions = ["Left", "Right"]
+    moves = []
+    
+    # Loop through all pieces and test moves
     for piece in pieces:
-        # Get left and right locations
-        left = (piece[0] + direc["Left"][0], piece[1] + direc["Left"][1])
-        right = (piece[0] + direct["Right"][0], piece[1] + direc["Right"][1])
-
-        try:
-            if get_location(board, left) == 0:
-                append
-
+        for action in actions:
+            move = get_move(board, player, piece, action)
+            
+            if move is not None:
+                moves.append(move)
+    
+    return moves
+                
 
 if __name__ == "__main__":
     # Read in game board
