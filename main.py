@@ -1,5 +1,17 @@
 BOARD_SIZE = 8
 
+# Mapping player and direction to x, y change in board
+ACTIONS = {
+    1: {
+        "Right": (1, 1),
+        "Left": (-1, 1)
+    },
+    2: {
+        "Right": (1, -1),
+        "Left": (-1, -1)
+    }
+}
+
 
 def read_board():
     """ Read in game board
@@ -43,14 +55,32 @@ def get_location(board, piece):
     if piece[0] < 0 or piece[1] < 0 or piece[0] >= BOARD_SIZE or piece[1] >= BOARD_SIZE:
         raise IndexError("IndexError: Piece out of bounds")
 
+    # Default to empty space
     val = 0
 
+    # Check if location contains a piece
     if piece in board[1]:
         val = 1
     elif piece in board[2]:
         val = 2
 
     return val
+
+
+def get_available_moves(board, player):
+    pieces = board[player]
+    direc = ACTIONS[player]
+
+    available_moves = []
+
+    for piece in pieces:
+        # Get left and right locations
+        left = (piece[0] + direc["Left"][0], piece[1] + direc["Left"][1])
+        right = (piece[0] + direct["Right"][0], piece[1] + direc["Right"][1])
+
+        try:
+            if get_location(board, left) == 0:
+                append
 
 
 if __name__ == "__main__":
