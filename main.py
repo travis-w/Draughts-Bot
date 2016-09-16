@@ -101,6 +101,44 @@ def get_location(board, piece):
     return val
 
 
+def move_result(board, move, player):
+    """ Get board after given move is made
+
+    Simulate move being made on given board and return resulting board
+
+    :param list board: Board to simulate move on
+
+    :param dict move: Move to simulate on board
+
+    :param int player: Player that is making move
+
+    :returns New board representation with move executed. Opponent pieces
+        that got jumped will be removed and piece will be in ending location
+
+    """
+    # Duplicate board
+    new_board = {
+        1: [x for x in board[1]],
+        2: []
+    }
+
+    # Get opponent
+    opp = 2 if player == 1 else 1
+
+    # Move piece from start to end
+    piece = move["start"]
+    new_piece = move["locations"][len(move["locations"]) - 1]
+
+    # Remove piece from player
+    new_board[player].remove(piece)
+    new_board[player].append(new_piece)
+
+    # Remove all jumped pieces
+    new_board[opp] = [x for x in board[2] if x not in move["pieces_jumped"]]
+
+    return new_board
+
+
 def possible_jumps(board, player, piece):
     """ Get possible jumps a piece can make
 
