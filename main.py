@@ -119,10 +119,10 @@ def possible_jumps(board, player, piece):
                         jump_locations.append(nxt)
                     else:
                         pass
-                except:
+                except IndexError:
                     # Off board
                     pass
-        except:
+        except IndexError:
             # Caught index errror (jump out of bounds stop trying)
             pass
 
