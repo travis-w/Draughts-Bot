@@ -42,7 +42,18 @@ def read_board():
 
 
 def print_move(move, reason):
-    """
+    """ Print a move of with reason
+
+    Prints a move off in following format:
+        StartY, StartX
+        NumMoves
+        MoveY MoveX (For NumMoves times)
+        Reason
+
+    :param dict move: Dictionary of the move to be printed
+
+    :param string reason: Reason to make move (any comment on move)
+
     """
     # Print starting location and number of moves
     move_str = str(move["start"][0]) + " " + str(move["start"][1]) + "\n"
@@ -64,7 +75,7 @@ def print_move(move, reason):
 def get_location(board, piece):
     """ Given a tuple, retrieve location on board
 
-    :param list board: Board to get piece at
+    :param dict board: Board to get piece at
 
     :param tuple piece: Tuple of piece location to get (x, y)
 
@@ -91,7 +102,18 @@ def get_location(board, piece):
 
 
 def possible_jumps(board, player, piece):
-    """
+    """ Get possible jumps a piece can make
+
+    Given a piece, see if any opponent pieces can be (single) jumped
+
+    :param dict board: Board to examine scenario
+
+    :param int player: Number of player to check for jumps (1 or 2)
+
+    :param tuple piece: Piece to check on board (y, x)
+
+    :returns List of locations that given piece can jump over opponent to
+
     """
     # Get actions
     actions = ACTIONS[player]
@@ -130,7 +152,24 @@ def possible_jumps(board, player, piece):
 
 
 def get_move(board, player, piece, direction):
-    """
+    """ Generate a move given a piece and direction if possible
+
+    Given a piece location and direction, determine the following moves
+        that can be made accounting for mandatory jumping.
+
+    :param dict board: Board to check move on
+
+    :param int player: Player to check move of (1 or 2)
+
+    :param tuple piece; Piece to make the move on (y, x)
+
+    :param string direction: Direction to make move (Left or Right)
+
+    :returns Move if possile, None if move is invalid
+        Move object contains following attributes:
+            -start (tuple): Piece starting location (y, x)
+            -locations (list): List of locations piece being moved to
+
     """
     # Get cooresponding action
     action = ACTIONS[player][direction]
@@ -194,7 +233,16 @@ def get_move(board, player, piece, direction):
 
 
 def get_available_moves(board, player):
-    """
+    """ Get all available moves
+
+    Get a list of all available moves for a given player
+
+    :param dict board: Board to check
+
+    :param int player: Player to get possible moves for (1 or 2)
+
+    :returns List of all possible moves
+    
     """
     pieces = board[player]
     actions = ["Left", "Right"]
