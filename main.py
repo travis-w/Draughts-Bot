@@ -46,15 +46,15 @@ def print_move(move, reason):
     """
     # Print starting location and number of moves
     move_str = str(move["start"][0]) + " " + str(move["start"][1]) + "\n"
-    move_str += str(move["moves"]) + "\n"
+    move_str += str(len(move["locations"])) + "\n"
 
     # Add landing locations
-    for i in range(move["moves"]):
+    for i in range(len(move["locations"])):
         locations = move["locations"][i]
         move_str += str(locations[0]) + " " + str(locations[1])
 
         # Add new line on all but last location
-        if i < move["moves"] - 1:
+        if i < len(move["locations"]) - 1:
             move_str += "\n"
 
     print(move_str)
@@ -141,7 +141,6 @@ def get_move(board, player, piece, direction):
     # Start building move
     move = {
         "start": piece,
-        "moves": 1,
         "locations": []
     }
 
@@ -176,6 +175,18 @@ def get_move(board, player, piece, direction):
             move["locations"].append(other_side)
 
             # Check for double/triple jumps
+            possible = possible_jumps(board, player, other_side)
+
+            while len(possible) != 0:
+                # TODO: Will only make one move even if two possible
+                next_move = possible[0]
+
+                # Add to list
+                move["locations"].append(next_move)
+
+                # Look for more possible
+                possible = possible_jumps(board, player, next_move)
+
             return move
         else:
             # Jump can not be made
@@ -206,8 +217,6 @@ if __name__ == "__main__":
 
     # Get player
     player_num = int(input())
-
-    print(possible_jumps(game_board, player_num, (1, 4)))
 
     # Get all available moves
     moves = get_available_moves(game_board, player_num)
