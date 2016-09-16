@@ -112,7 +112,8 @@ def possible_jumps(board, player, piece):
 
     :param tuple piece: Piece to check on board (y, x)
 
-    :returns List of locations that given piece can jump over opponent to
+    :returns List of tuples where first value is place being jumped to
+        and second value is location of piece being jumped
 
     """
     # Get actions
@@ -138,7 +139,7 @@ def possible_jumps(board, player, piece):
                 try:
                     if get_location(board, nxt) == 0:
                         # Jump possible add location
-                        jump_locations.append(nxt)
+                        jump_locations.append((nxt, new_loc))
                     else:
                         pass
                 except IndexError:
@@ -169,6 +170,7 @@ def get_move(board, player, piece, direction):
         Move object contains following attributes:
             -start (tuple): Piece starting location (y, x)
             -locations (list): List of locations piece being moved to
+            -pieces_jumped (list): List of pieces being jumped in move
 
     """
     # Get cooresponding action
@@ -180,7 +182,8 @@ def get_move(board, player, piece, direction):
     # Start building move
     move = {
         "start": piece,
-        "locations": []
+        "locations": [],
+        "pieces_jumped": []
     }
 
     # Try/Except to allow checking if on board
@@ -213,6 +216,9 @@ def get_move(board, player, piece, direction):
             # Jump can be made
             move["locations"].append(other_side)
 
+            # Add piece to jumped pieces
+            move["pieces_jumped"].append(new_location)
+
             # Check for double/triple jumps
             possible = possible_jumps(board, player, other_side)
 
@@ -221,10 +227,13 @@ def get_move(board, player, piece, direction):
                 next_move = possible[0]
 
                 # Add to list
-                move["locations"].append(next_move)
+                move["locations"].append(next_move[0])
+
+                # Add piece jumped
+                move["pieces_jumped"].append(next_move[1])
 
                 # Look for more possible
-                possible = possible_jumps(board, player, next_move)
+                possible = possible_jumps(board, player, next_move[0])
 
             return move
         else:
@@ -242,7 +251,7 @@ def get_available_moves(board, player):
     :param int player: Player to get possible moves for (1 or 2)
 
     :returns List of all possible moves
-    
+
     """
     pieces = board[player]
     actions = ["Left", "Right"]
