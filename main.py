@@ -306,6 +306,45 @@ def get_available_moves(board, player):
     return moves
 
 
+def safe_pieces(board, player):
+    """ Get number of safe pieces
+
+    Get number of pieces that are safe for the rest of the game. IE, past
+        every opponent piece
+    """
+    # To get least moved piece get min y for player 1 and max y for 2
+    min_max = { 1: min, 2: max }
+
+    # Get opponent
+    opp = 2 if player == 1 else 1
+
+    # Get lowest opponent
+    lowest = min_max[opp](board[opp], key = lambda x: x[0])
+
+    # Get list of pieces "lower" than lowest opponent
+    if opp == 2:
+        safe = [x for x in board[player] if x[0] >= lowest[0]]
+    else:
+        safe = [x for x in board[player] if x[0] <= lowest[0]]
+
+    return len(safe)
+
+
+def score_board(board, player):
+    """ Scores board for opponent
+    """
+    # Get opponent
+    opp = 2 if player == 1 else 1
+
+    # Count number of pieces for player and opponent
+    num_player = len(board[player])
+    num_opponent = len(board[opp])
+
+    # Get guaranteed safe pieces
+    player_safe = safe_pieces(board, player)
+    opponent_safe = safe_pieces(board, opp)
+
+
 if __name__ == "__main__":
     # Read in game board
     game_board = read_board()
