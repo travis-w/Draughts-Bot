@@ -127,7 +127,7 @@ def move_result(board, move, player):
 
     # Move piece from start to end
     piece = move["start"]
-    new_piece = move["locations"][len(move["locations"]) - 1]
+    new_piece = move["locations"][-1]
 
     # Remove piece from player
     new_board[player].remove(piece)
@@ -313,13 +313,13 @@ def safe_pieces(board, player):
         every opponent piece
     """
     # To get least moved piece get min y for player 1 and max y for 2
-    min_max = { 1: min, 2: max }
+    min_max = {1: min, 2: max}
 
     # Get opponent
     opp = 2 if player == 1 else 1
 
     # Get lowest opponent
-    lowest = min_max[opp](board[opp], key = lambda x: x[0])
+    lowest = min_max[opp](board[opp], key=lambda x: x[0])
 
     # Get list of pieces "lower" than lowest opponent
     if opp == 2:
@@ -327,7 +327,33 @@ def safe_pieces(board, player):
     else:
         safe = [x for x in board[player] if x[0] <= lowest[0]]
 
-    return len(safe)
+    return safe
+
+
+def get_vulnerable(board, player):
+    """
+    """
+    # Get Actions
+    actions = ACTIONS[player]
+
+    # Start with empty list
+    vulnerable = []
+
+    # Analyze all player moves to see if empty space behind
+    for move in board[player]:
+        for a in actions:
+            back = (move[0] - actions[a][0], move[1] - actions[a][1])
+            forward = (move[0] + actions[a][0], move[1] + actions[a][1])
+
+            # Check direction
+            try:
+                if (get_location(board, back) == 0 and
+                   get_location(board, forward)):
+                    vulnerable.append(move)
+            except IndexError:
+                pass
+
+    return vulnerable
 
 
 def score_board(board, player):
@@ -342,7 +368,36 @@ def score_board(board, player):
 
     # Get guaranteed safe pieces
     player_safe = safe_pieces(board, player)
-    opponent_safe = safe_pieces(board, opp)
+    opp_safe = safe_pieces(board, opp)
+
+    # Get available opponent moves
+    opp_moves = get_available_moves(board, opp)
+
+    # Find most number of pieces opponent can take
+    opp_most_take = max(opp_moves, key=lambda x: len(x["pieces_jumped"]))
+    opp_most_take = len(opp_most_take["pieces_jumped"])
+
+    # Get all pieces that can be immediately jumped next turn
+    can_be_jumped = [x["pieces_jumped"] for x in opp_moves]
+    can_be_jumped = [a for b in can_be_jumped for a in b]
+    can_be_jumped = list(set(can_be_jumped))
+
+    # Get number of pieces on wall
+    player_wall = [x for x in board[player] if x[1] == 0 or x[1] == 7]
+
+    # Number of opponent pieces that can be moved to side wall
+    opp_ending = [x["locations"][-1] for x in opp_moves]
+    opp_wall = [x for x in opp_ending if x[1] == 0 or x[1] == 7]
+
+    # Get vulnerable pieces that cant be jumped this turn
+    # Remove pieces on wall safe pieces and pieces that can be jumped this turn
+    player_vul = get_vulnerable(board, player)
+    player_vul = [x for x in player_vul if x not in player_wall]
+    player_vul = [x for x in player_vul if x not in player_safe]
+    player_vul = [x for x in player_vul if x not in can_be_jumped]
+
+    print(can_be_jumped)
+    print(player_vul)
 
 
 if __name__ == "__main__":
