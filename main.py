@@ -119,7 +119,7 @@ def move_result(board, move, player):
     # Duplicate board
     new_board = {
         1: [x for x in board[1]],
-        2: []
+        2: [x for x in board[2]]
     }
 
     # Get opponent
@@ -134,7 +134,7 @@ def move_result(board, move, player):
     new_board[player].append(new_piece)
 
     # Remove all jumped pieces
-    new_board[opp] = [x for x in board[2] if x not in move["pieces_jumped"]]
+    new_board[opp] = [x for x in board[opp] if x not in move["pieces_jumped"]]
 
     return new_board
 
@@ -311,6 +311,13 @@ def safe_pieces(board, player):
 
     Get number of pieces that are safe for the rest of the game. IE, past
         every opponent piece
+
+    :param dict board: Board to look at
+
+    :param int player: Player to look at board for
+
+    :returns List of pieces that are safe for given player
+    
     """
     # To get least moved piece get min y for player 1 and max y for 2
     min_max = {1: min, 2: max}
@@ -319,6 +326,9 @@ def safe_pieces(board, player):
     opp = 2 if player == 1 else 1
 
     # Get lowest opponent
+    if len(board[opp]) == 0:
+        return board[player]
+
     lowest = min_max[opp](board[opp], key=lambda x: x[0])
 
     # Get list of pieces "lower" than lowest opponent
@@ -331,7 +341,18 @@ def safe_pieces(board, player):
 
 
 def get_vulnerable(board, player):
-    """
+    """ Get vulnerable pieces
+
+    Get pieces for player that have a path to be jumped. So either
+        front/right and back/left and/or front/left and back/right are both
+        open
+
+    :param dict board: Reference to board to look at
+
+    :param int player: Player to look at
+
+    :returns list of pieces that are vulnerable
+
     """
     # Get Actions
     actions = ACTIONS[player]
@@ -358,6 +379,23 @@ def get_vulnerable(board, player):
 
 def score_board(board, player):
     """ Scores board for opponent
+
+    Scores the board with the following metrics:
+        num_player - Number of player pieces on board
+        num_opponent - Number of opponent pieces on board
+        player_safe - Guaranteed scores for player
+        opp_safe - Guaranteed scores for opponent
+        can_be_jumped - Player pieces that can be jumped on opp next turn
+        player_wall - Player pieces on the wall
+        opp_wall - Opponent pieces on the wall
+        player_vul - Player pieces that can be jumped but not immediately
+
+    :param dict board: Board to score
+
+    :param int player: Player to score board for
+
+    :returns Integer score for given board
+
     """
     # Get opponent
     opp = 2 if player == 1 else 1
@@ -373,9 +411,19 @@ def score_board(board, player):
     # Get available opponent moves
     opp_moves = get_available_moves(board, opp)
 
-    # Find most number of pieces opponent can take
-    opp_most_take = max(opp_moves, key=lambda x: len(x["pieces_jumped"]))
-    opp_most_take = len(opp_most_take["pieces_jumped"])
+    # Return high score if move wins game
+    if num_opponent == 0 or len(player_safe) > num_opponent:
+        return 9999999
+
+    if len(opp_moves) == 0 and num_player > num_opponent:
+        return 9999999
+
+    if len(opp_moves) > 0:
+        # Find most number of pieces opponent can take
+        opp_most_take = max(opp_moves, key=lambda x: len(x["pieces_jumped"]))
+        opp_most_take = len(opp_most_take["pieces_jumped"])
+    else:
+        opp_most_take = 0
 
     # Get all pieces that can be immediately jumped next turn
     can_be_jumped = [x["pieces_jumped"] for x in opp_moves]
@@ -396,8 +444,32 @@ def score_board(board, player):
     player_vul = [x for x in player_vul if x not in player_safe]
     player_vul = [x for x in player_vul if x not in can_be_jumped]
 
-    print(can_be_jumped)
-    print(player_vul)
+    score = 50 + num_player - num_opponent + len(player_safe) - len(opp_safe)
+    score += len(player_wall) - opp_most_take - len(can_be_jumped) - len(opp_wall) - len(player_vul)
+
+    return score
+
+
+def score_all_moves(board, moves, player):
+    """ Score every move in given list
+
+    Loop through list and calculate score for every move
+
+    :param dict board: Board moves are being made on
+
+    :param list moves: List of moves to score
+
+    :param int player: Player scoring moves for
+
+    :returns List of moves with all moves scored
+
+    """
+    for move in moves:
+        tmp_board = move_result(board, move, player)
+
+        move["score"] = score_board(tmp_board, player)
+
+    return moves
 
 
 if __name__ == "__main__":
@@ -410,5 +482,9 @@ if __name__ == "__main__":
     # Get all available moves
     moves = get_available_moves(game_board, player_num)
 
+    scored_moves = score_all_moves(game_board, moves, player_num)
+
+    highest_score = max(scored_moves, key=lambda x: x["score"])
+
     # Print a random move
-    print_move(moves[randint(0, len(moves) - 1)], "Random")
+    print_move(highest_score, highest_score["score"])
