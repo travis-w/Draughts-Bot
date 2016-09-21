@@ -317,7 +317,7 @@ def safe_pieces(board, player):
     :param int player: Player to look at board for
 
     :returns List of pieces that are safe for given player
-    
+
     """
     # To get least moved piece get min y for player 1 and max y for 2
     min_max = {1: min, 2: max}
@@ -377,7 +377,7 @@ def get_vulnerable(board, player):
     return vulnerable
 
 
-def score_board(board, player):
+def score_board(board, move, player):
     """ Scores board for opponent
 
     Scores the board with the following metrics:
@@ -400,9 +400,18 @@ def score_board(board, player):
     # Get opponent
     opp = 2 if player == 1 else 1
 
+    # Start score
+    score = 0
+
+    # Number jumped in move
+    num_jumped = len(move["pieces_jumped"])
+
     # Count number of pieces for player and opponent
     num_player = len(board[player])
     num_opponent = len(board[opp])
+
+    """ Player Count Score """
+    score += 2 * (num_player - num_opponent)
 
     # Get guaranteed safe pieces
     player_safe = safe_pieces(board, player)
@@ -410,42 +419,51 @@ def score_board(board, player):
 
     # Get available opponent moves
     opp_moves = get_available_moves(board, opp)
+    player_moves = get_available_moves(board, player)
 
+    avg_move_per_piece = len(player_moves) / num_player
+    avg_move_per_piece_opp = len(opp_moves) / num_opponent
+
+    """ Win Conditions """
     # Return high score if move wins game
     if num_opponent == 0 or len(player_safe) > num_opponent:
-        return 9999999
+        score += 9999999
 
     if len(opp_moves) == 0 and num_player > num_opponent:
-        return 9999999
+        score += 9999999
 
+    # Count best jump
     if len(opp_moves) > 0:
         # Find most number of pieces opponent can take
-        opp_most_take = max(opp_moves, key=lambda x: len(x["pieces_jumped"]))
-        opp_most_take = len(opp_most_take["pieces_jumped"])
+        opp_best_move = max(opp_moves, key=lambda x: len(x["pieces_jumped"]))
+        opp_most_take = len(opp_best_move["pieces_jumped"])
+
+        # Analyze player move for trade
+        next_board = move_result(board, opp_best_move, opp)
+
+        next_moves = get_available_moves(next_board, player)
+
+        if len(next_moves) > 0:
+            most_take = max(next_moves, key=lambda x: len(x["pieces_jumped"]))
+            most_take = len(most_take["pieces_jumped"])
+        else:
+            most_take = 0
+
+        if most_take > opp_most_take:
+            score += most_take
+        else:
+            score -= opp_most_take
     else:
         opp_most_take = 0
 
-    # Get all pieces that can be immediately jumped next turn
-    can_be_jumped = [x["pieces_jumped"] for x in opp_moves]
-    can_be_jumped = [a for b in can_be_jumped for a in b]
-    can_be_jumped = list(set(can_be_jumped))
+    # Discourage allowing moves that set up Double+ jumps for opponent
+    if opp_most_take > 1:
+        score -= opp_most_take
+    elif opp_most_take == 0:
+        score += 5
 
-    # Get number of pieces on wall
-    player_wall = [x for x in board[player] if x[1] == 0 or x[1] == 7]
-
-    # Number of opponent pieces that can be moved to side wall
-    opp_ending = [x["locations"][-1] for x in opp_moves]
-    opp_wall = [x for x in opp_ending if x[1] == 0 or x[1] == 7]
-
-    # Get vulnerable pieces that cant be jumped this turn
-    # Remove pieces on wall safe pieces and pieces that can be jumped this turn
-    player_vul = get_vulnerable(board, player)
-    player_vul = [x for x in player_vul if x not in player_wall]
-    player_vul = [x for x in player_vul if x not in player_safe]
-    player_vul = [x for x in player_vul if x not in can_be_jumped]
-
-    score = 50 + num_player - num_opponent + len(player_safe) - len(opp_safe)
-    score += len(player_wall) - opp_most_take - len(can_be_jumped) - len(opp_wall) - len(player_vul)
+    if num_jumped > opp_most_take:
+        score += num_jumped - opp_most_take
 
     return score
 
@@ -467,7 +485,7 @@ def score_all_moves(board, moves, player):
     for move in moves:
         tmp_board = move_result(board, move, player)
 
-        move["score"] = score_board(tmp_board, player)
+        move["score"] = score_board(tmp_board, move, player)
 
     return moves
 
